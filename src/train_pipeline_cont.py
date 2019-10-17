@@ -70,7 +70,7 @@ class EpsilonGreedyBehavior(object):
     def act_batch(self, states, epsilon):
         batch_size = states.size()[0]
         sample = np.random.random([batch_size,1])
-        greedy_a = self.target_agent.act(states)
+        greedy_a = self.target_agent.act(states)[:, None]
         random_a = np.random.uniform(
             -1, 1, size=(batch_size, self.target_agent.action_dim)) * self.target_agent.max_action
         return (sample < epsilon) * random_a + (sample >= epsilon) * greedy_a
@@ -122,9 +122,9 @@ def train_pipeline(env, config, eval_agent, factual_types, seedvec = None):
                 state_diff = next_state - state
 
                 if i_episode < config.train_num_traj:
-                    memory.push(state, Tensor(behavior_action), state_diff, Tensor([reward]), done, n_steps, Tensor([factual]), Tensor([last_factual]))
+                    memory.push(state, Tensor([behavior_action]), state_diff, Tensor([[reward]]), done, n_steps, Tensor([factual]), Tensor([last_factual]))
                 else:
-                    dev_memory.push(state, Tensor(behavior_action), state_diff, Tensor([reward]), done, n_steps, Tensor([factual]), Tensor([last_factual]))
+                    dev_memory.push(state, Tensor([behavior_action]), state_diff, Tensor([[reward]]), done, n_steps, Tensor([factual]), Tensor([last_factual]))
 
                 state = next_state
                 reward_sum += reward

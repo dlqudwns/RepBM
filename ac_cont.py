@@ -2,6 +2,7 @@ import random
 from collections import deque
 
 from tqdm import tqdm
+import env
 import os
 import gym
 import numpy as np
@@ -11,7 +12,7 @@ import torch.nn.functional as F
 
 from src.memory import ReplayMemory, Transition
 from src.models_cont import Critic, Actor
-from src.config import pendulum_config
+from src import config
 
 # if gpu is to be used
 use_cuda = False #torch.cuda.is_available()
@@ -29,16 +30,16 @@ class DDPGAgent():
 
         self.actor = Actor(config)
         self.actor_target = Actor(config)
-        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=config.dqn_alpha)
+        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=config.ac_alpha)
 
         self.critic = Critic(config)
         self.critic_target = Critic(config)
-        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config.dqn_alpha)
+        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config.ac_alpha)
 
         self.memory = ReplayMemory(config.buffer_capacity)
 
     def epsilon_act(self, state, epsilon=None):
-        epsilon = epsilon or self.config.dqn_epsilon
+        epsilon = epsilon or self.config.ac_epsilon
         sample = random.random()
         if sample > epsilon:
             return self.act(state)
@@ -46,7 +47,7 @@ class DDPGAgent():
             return self.uniform_random_act()
 
     def uniform_random_act(self):
-        return np.array([[(random.random() * 2 - 1) * self.max_action for _ in range(self.action_dim)]])
+        return np.array([(random.random() * 2 - 1) * self.max_action for _ in range(self.action_dim)])
 
     def act(self, state):
         """Returns actions for given state as per current policy."""
@@ -54,16 +55,16 @@ class DDPGAgent():
         with torch.no_grad():
             action = self.actor(state).cpu().data.numpy()
         self.actor.train()
-        return np.clip(action, -1, 1) * self.max_action
+        return np.reshape(np.clip(action, -1, 1) * self.max_action, [-1])
 
     def step(self, state, action, next_state, reward, done):
         self.memory.push(state, action, next_state, reward, done, None)
 
     def learn(self):
-        if self.config.dqn_batch_size > len(self.memory):
+        if self.config.ac_batch_size > len(self.memory):
             return
 
-        experiences = self.memory.sample(self.config.dqn_batch_size)
+        experiences = self.memory.sample(self.config.ac_batch_size)
         batch = Transition(*zip(*experiences))
         next_states = torch.cat(batch.next_state)
         states = torch.cat(batch.state)
@@ -91,11 +92,11 @@ class DDPGAgent():
 
     def soft_update(self, source, target):
         for target_param, local_param in zip(target.parameters(), source.parameters()):
-            target_param.data.copy_(self.config.dqn_tau * local_param.data
-                                    + (1.0 - self.config.dqn_tau) * target_param.data)
+            target_param.data.copy_(self.config.ac_tau * local_param.data
+                                    + (1.0 - self.config.ac_tau) * target_param.data)
 
 def epsilon_decay_per_ep(epsilon, config):
-    return max(config.dqn_epsilon_min, epsilon*config.dqn_epsilon_decay)
+    return max(config.ac_epsilon_min, epsilon*config.ac_epsilon_decay)
 
 def preprocess_state(state, state_dim):
     return Tensor(np.reshape(state, [1, state_dim]))
@@ -122,28 +123,33 @@ def load_ddpg_agent(config, checkpoint='target_policies',filename='ddpg_agent.pt
     return agent
 
 if __name__ == "__main__":
-    env = gym.make("Pendulum-v0")
-    config = pendulum_config
-    epsilon = config.dqn_epsilon
-    scores = deque(maxlen=100)
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--env_name", help="name of the env to train", default='cartpole')
+    args = parser.parse_args()
+    if args.env_name == 'pendulum':
+        env = gym.make("Pendulum-v0")
+        config = config.pendulum_config
+    elif args.env_name == 'cartpole':
+        env = gym.make("ContinuousCartPole-v0")
+        config = config.contcartpole_config
+    epsilon = config.ac_epsilon
     dp_scores = deque(maxlen=30)
     agent = DDPGAgent(config)
 
-    for i_episode in tqdm(range(config.dqn_num_episodes)):
+    for i_episode in tqdm(range(config.ac_num_episodes)):
         # Initialize the environment and state
         state = preprocess_state(env.reset(), config.state_dim)
         done = False
-        reward_sum = 0
         while not done:
             # Select and perform an action
-            action = agent.epsilon_act(state)
+            action = agent.epsilon_act(state, epsilon)
             next_state, reward, done, _ = env.step(action)
             next_state = preprocess_state(next_state, config.state_dim)
-            agent.step(state, action, next_state, reward, Tensor([done]))
+            agent.step(state, Tensor([action]), next_state, Tensor([reward]), Tensor([done]))
             # Move to the next state
             state = next_state
-            reward_sum += reward
-        scores.append(reward_sum)
         state = preprocess_state(env.reset(), config.state_dim)
         done = False
         reward_sum = 0
@@ -158,7 +164,7 @@ if __name__ == "__main__":
         mean_score = np.mean(dp_scores)
 
         # Set the value we want to achieve
-        if mean_score >= -170 and i_episode >= 30:
+        if mean_score >= config.win_score and i_episode >= 300:
             print('Ran {} episodes. Solved after {} trials ✔'.format(i_episode, i_episode - 30))
             break
         if i_episode % 100 == 0:
@@ -166,7 +172,7 @@ if __name__ == "__main__":
                   .format(i_episode, mean_score, epsilon))
         agent.learn()
         epsilon = epsilon_decay_per_ep(epsilon, config)
-    save_ddpg_agent(agent)
+    save_ddpg_agent(agent, filename=args.env_name + '_ddpg_agent.pth.tar')
 
     groundtruth = deque()
     for i_episode in tqdm(range(1000)):
@@ -174,7 +180,6 @@ if __name__ == "__main__":
         true_done = False
         reward_sum = 0
         while not true_done:
-            # action = select_action_random(action_size=config.action_size)
             action = agent.act(true_state)
             true_next_state, true_reward, true_done, _ = env.step(action)
             reward_sum += true_reward

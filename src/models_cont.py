@@ -14,7 +14,7 @@ Tensor = FloatTensor
 class Critic(nn.Module):
     def __init__(self, config):
         super(Critic, self).__init__()
-        state_dim, action_dim, hidden_dims = config.state_dim, config.action_dim, config.dqn_hidden_dims
+        state_dim, action_dim, hidden_dims = config.state_dim, config.action_dim, config.ac_hidden_dims
         mlp_layers = []
         prev_hidden_size = state_dim + action_dim
         for next_hidden_size in hidden_dims:
@@ -34,7 +34,7 @@ class Critic(nn.Module):
 class Actor(nn.Module):
     def __init__(self, config):
         super(Actor, self).__init__()
-        state_dim, action_dim, hidden_dims = config.state_dim, config.action_dim, config.dqn_hidden_dims
+        state_dim, action_dim, hidden_dims = config.state_dim, config.action_dim, config.ac_hidden_dims
         mlp_layers = []
         prev_hidden_size = state_dim
         for next_hidden_size in hidden_dims + [action_dim]:
@@ -86,9 +86,9 @@ class SmallSampleSet(object):
             states = torch.stack([t.state for t in self.allsamples])
             state_diffs = torch.stack([t.state_diff for t in self.allsamples])
             rewards = torch.stack([t.reward for t in self.allsamples])
-            self.state_mean, self.state_std = torch.mean(states, axis=0), torch.std(states, axis=0)
-            self.state_diff_mean, self.state_diff_std = torch.mean(state_diffs, axis=0), torch.std(state_diffs, axis=0)
-            self.reward_mean, self.reward_std = torch.mean(rewards, axis=0), torch.std(rewards, axis=0)
+            self.state_mean, self.state_std = torch.mean(states, axis=0), torch.std(states, axis=0) + 1e-3
+            self.state_diff_mean, self.state_diff_std = torch.mean(state_diffs, axis=0), torch.std(state_diffs, axis=0) + 1e-3
+            self.reward_mean, self.reward_std = torch.mean(rewards, axis=0), torch.std(rewards, axis=0) + 1e-3
         else:
             self.state_mean, self.state_std, self.state_diff_mean, self.state_diff_std, \
             self.reward_mean, self.reward_std = statistics

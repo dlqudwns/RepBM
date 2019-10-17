@@ -1,25 +1,89 @@
+
+class contcartpole_config():
+    # domain parameters
+    state_dim = 4
+    action_dim = 1
+    max_action = 1
+    gamma = 1.0
+    win_score = 100
+    max_length = 200
+    rescale = [[1, 1, 1, 1]]
+
+    # q training parameters
+    ac_epsilon = 1.0
+    ac_num_episodes = 3000
+    ac_epsilon_min = 0.01
+    ac_epsilon_decay = 0.995
+    ac_tau = 0.01
+    ac_batch_size = 64
+    buffer_capacity = 10000
+    ac_alpha = 0.01
+    ac_hidden_dims = [48,48]
+
+    sample_capacity = 200000
+
+    # model parameters
+    sample_num_traj = 1024
+    train_num_traj = 900
+    dev_num_traj = 124
+    transition_input_dims = 4
+    rep_hidden_dims = [16] # The last dim is the representation dim
+    transition_hidden_dims = []
+    reward_hidden_dims = [50,50]
+    terminal_hidden_dims = [50,50]
+    behavior_epsilon = 0.2
+    eval_epsilon = 0.0
+
+    # model training parameter
+    print_per_epi = 10
+    train_num_episodes = 500
+    train_num_batches = 100
+    train_batch_size = 64
+    test_batch_size = 16
+    tc_num_episode = 100
+    tc_num_batches = 100
+    tc_batch_size = 64
+    tc_test_batch_size = 16
+    lr = 0.01
+    lr_decay = 0.8
+    alpha_rep = 0.01
+    weight_decay = 0
+
+    # MRDR parameter
+    soften_epsilon = 0.02
+    mrdr_lr = 0.01
+    mrdr_num_episodes = 100
+    mrdr_num_batches = 100
+    mrdr_batch_size = 1000
+    mrdr_test_batch_size = 100
+    mrdr_hidden_dims = [32]
+
+    eval_num_traj = 1000
+    eval_num_rollout = 1
+    N = 100
+    MAX_SEED = 1000000
+
 class pendulum_config():
     # domain parameters
     state_dim = 3
     action_dim = 1
     max_action = 2
     gamma = 1.0
-    n_win_ticks = 195
+    win_score = -170
     max_length = 200
-    oracle_reward = 1
     rescale = [[1, 1, 1]]
 
     # q training parameters
-    dqn_batch_size = 64
-    dqn_hidden_dims = [48,48]
-    dqn_num_episodes = 3000
+    ac_epsilon = 1.0
+    ac_num_episodes = 3000
+    ac_epsilon_min = 0.01
+    ac_epsilon_decay = 0.995
+    ac_tau = 0.01
+    ac_batch_size = 64
     buffer_capacity = 10000
-    dqn_alpha = 0.01
-    dqn_alpha_decay = 0.01
-    dqn_epsilon = 1.0
-    dqn_epsilon_min = 0.01
-    dqn_epsilon_decay = 0.995
-    dqn_tau = 0.01
+    ac_alpha = 0.01
+    ac_hidden_dims = [48,48]
+
     sample_capacity = 200000
 
     # model parameters
