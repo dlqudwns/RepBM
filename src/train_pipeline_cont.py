@@ -44,7 +44,7 @@ def rollout_batch(init_states, mdpnet, terminal_classifier, num_rollout, egbehav
 
         states_re = states * Tensor(np.float32(config.rescale))
 
-        states_diff, reward, _ = mdpnet.predict(states_re.type(Tensor), actions.type(Tensor))
+        states_diff, reward = mdpnet.predict(states_re.type(Tensor), actions.type(Tensor))
         next_states = states_diff.detach() / Tensor(np.float32(config.rescale)) + states
         t_reward = t_reward + (1 - done.type(Tensor)).float() * reward.detach()
 

@@ -30,22 +30,21 @@ if __name__ == "__main__":
     agent.critic.eval()
     seedvec = np.random.randint(0, config.MAX_SEED, config.sample_num_traj)
 
-    #factual_types = ['hard', 2.5, 2.0, 1.5, 1.0, 0.5]
-    factual_types = ['hard']
+    factual_types = ['hard', 2.5, 2.0, 1.5, 1.0, 0.5]
     methods = ['Baseline'] + ['mse_pi_{}'.format(ft) for ft in factual_types] +\
               ['repbm_{}'.format(ft) for ft in factual_types]
 
     num_method = len(methods)
     max_name_length = len(max(methods,key=len))
 
-    mse = [deque() for method in methods]
-    ind_mse = [deque() for method in methods]
+    mse = []
+    ind_mse = []
 
     results, target = train_pipeline(env, config, agent, factual_types, seedvec)
     for i_method in range(num_method):
         mse_1, mse_2 = error_info(results[i_method], target, methods[i_method].ljust(max_name_length))
-        mse[i_method].append(mse_1)
-        ind_mse[i_method].append(mse_2)
+        mse.append(mse_1)
+        ind_mse.append(mse_2)
     print(mse)
     print(ind_mse)
-    np.save('results/result_pendulum_{}.txt'.format(args.pid), [mse, ind_mse])
+    np.save('results/result_pendulum_{}'.format(args.pid), [mse, ind_mse])
