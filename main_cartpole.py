@@ -3,7 +3,7 @@ import torch
 import gym
 from src.models import QNet
 from src.config import cartpole_config
-from src.train_pipeline import train_pipeline
+from src.train_pipeline_simple import train_pipeline
 from src.utils import load_qnet, error_info
 from collections import deque
 
@@ -19,15 +19,10 @@ if __name__ == "__main__":
     env = gym.make("CartPole-v0")
     config = cartpole_config
     eval_qnet = QNet(config.state_dim,config.dqn_hidden_dims,config.action_size)
-    load_qnet(eval_qnet,filename='qnet_cp_short.pth.tar')
+    load_qnet(eval_qnet,filename='qnet.pth.tar')
     eval_qnet.eval()
 
-    methods = ['Model', 'DR', 'WDR', 'Soft DR', 'Soft WDR',
-               'Model Bsl', 'DR Bsl', 'WDR Bsl', 'Soft DR Bsl', 'Soft WDR Bsl',
-               'Model MSE', 'DR MSE', 'WDR MSE', 'Soft DR MSE', 'Soft WDR MSE',
-               'MRDR Q', 'MRDR', 'WMRDR', 'Soft MRDR', 'Soft WMRDR',
-               'MRDR-w Q', 'MRDR-w', 'WMRDR-w', 'Soft MRDR-w', 'Soft WMRDR-w',
-               'IS', 'WIS', 'Soft IS', 'Soft WIS', 'PDIS', 'WPDIS', 'Soft PDIS', 'Soft WPDIS']
+    methods = ['Model', 'Model Bsl', 'Model MSE']
     num_method = len(methods)
     max_name_length = len(max(methods,key=len))
 

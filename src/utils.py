@@ -5,7 +5,7 @@ import torch
 from torch.autograd import Variable
 
 # if gpu is to be used
-use_cuda = torch.cuda.is_available()
+use_cuda = False # torch.cuda.is_available()
 FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 LongTensor = torch.cuda.LongTensor if use_cuda else torch.LongTensor
 ByteTensor = torch.cuda.ByteTensor if use_cuda else torch.ByteTensor
@@ -64,7 +64,7 @@ def epsilon_greedy_action_batch(state_tensor, qnet, epsilon, action_size):
     greedy_a = qnet.forward(
             state_tensor.type(FloatTensor)).detach().max(1)[1].view(-1, 1)
     random_a = LongTensor(np.random.random_integers(0,action_size-1,(batch_size,1)))
-    return (sample < epsilon)*random_a + (sample >= epsilon)*greedy_a
+    return LongTensor(sample < epsilon)*random_a + LongTensor(sample >= epsilon)*greedy_a
 
 
 def epsilon_greedy_action(state_tensor, qnet, epsilon, action_size, q_values=None):
