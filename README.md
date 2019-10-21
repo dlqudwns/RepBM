@@ -1,4 +1,4 @@
-# Representation Balancing MDPs for Off-Policy Policy Evaluation
+# Representation Balancing MDPs for Off-Policy Policy Evaluation (Modified for continuous domains)
 
 This repository contains an implementation of the representation balancing MDP (RepBM) OPPE estimator 
 in paper [Representation Balancing MDPs for Off-Policy Policy Evaluation](https://arxiv.org/abs/1805.09044). 
