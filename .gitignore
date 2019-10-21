@@ -10,3 +10,4 @@ results/
 full_imputed_data/
 hiv_domain/hiv_results
 hiv_domain/*.pkl
+condor/
