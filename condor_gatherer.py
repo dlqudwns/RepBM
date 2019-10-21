@@ -1,17 +1,21 @@
 
 import numpy as np
 num_repetition = 100
-domain = 'pendulum'
+domain = 'cartpole'
 factual_types = ['hard', 2.5, 2.0, 1.5, 1.0, 0.5]
 methods = ['Baseline'] + ['mse_pi_{}'.format(ft) for ft in factual_types] +\
           ['repbm_{}'.format(ft) for ft in factual_types]
 experiments = {method:([],[]) for method in methods}
 for num in range(num_repetition):
     result_filepath = 'results/result_{}_{}.npy'.format(domain, num)
-    result = np.load(result_filepath)
-    for i, method in enumerate(methods):
-        experiments[method][0].append(result[0, i])
-        experiments[method][1].append(result[1, i])
+    try:
+        result = np.load(result_filepath)
+        print(result)
+        for i, method in enumerate(methods):
+            experiments[method][0].append(result[0, i])
+            experiments[method][1].append(result[1, i])
+    except:
+        print('passed')
 
 for key, value in experiments.items():
     print('({}) av_mse: {:.3f}±{:.3e}, ind_mse: {:.3f}±{:.3e}'.format(
